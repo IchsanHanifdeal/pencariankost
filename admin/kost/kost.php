@@ -81,7 +81,7 @@ require '../../backend/koneksi.php';
             <div class="card">
               <div class="card-header d-flex justify-content-between align-items-end">
                 <h3 class="card-title">Table Kost</h3>
-                <a href="#" class="btn btn-primary ml-auto">Tambah Data</a>
+                <a href="tambah.php" class="btn btn-primary ml-auto">Tambah Data</a>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
@@ -119,7 +119,7 @@ require '../../backend/koneksi.php';
                           <td><?php echo $latitude; ?></td>
                           <td class="text-center">
                             <a class="btn btn-warning" href="edit.php?id_kost=<?php echo $id; ?>"><i class="fas fa-edit"></i></a>
-                            <a class="btn btn-danger" href="hapus.php?id_kost=<?php echo $id; ?>"><i class="fas fa-trash"></i></a>
+                            <a class="btn btn-danger" href="#" onclick="confirmDelete(<?php echo $id; ?>)"><i class="fas fa-trash"></i></a>
                           </td>
                         </tr>
                             <?php
@@ -177,7 +177,6 @@ require '../../backend/koneksi.php';
 <script>
     var googleMap;
     var markers = [];
-    var circles = [];
 
     function initGoogleMap() {
         googleMap = new google.maps.Map(document.getElementById("google-map"), {
@@ -187,43 +186,60 @@ require '../../backend/koneksi.php';
             },
             zoom: 15,
         });
-    }
-    <?php
-    $resultd = mysqli_query($conn, $sqld);
-    while ($rowd = mysqli_fetch_assoc($resultd)) {
-        $nama = $rowd['nama_kost'];
-        $long = $rowd['longitude'];
-        $lat = $rowd['latitude'];
-        $alamat = $rowd['alamat'];
 
-        if (!empty($lat) && !empty($long)) {
-            ?>
-            var marker = new google.maps.Marker({
-                position: {
-                    lat: <?php echo $lat; ?>,
-                    lng: <?php echo $long; ?>
-                },
-                map: googleMap,
-                title: '<?php echo $nama; ?>',
-                icon: {
-                    path: google.maps.SymbolPath.HOUSE,
-                    scale: 6,
-                    fillColor: 'blue',
-                    fillOpacity: 1
-                }
-            });
+        <?php
+        $resultd = mysqli_query($conn, $sqld);
+        while ($rowd = mysqli_fetch_assoc($resultd)) {
+            $nama = $rowd['nama_kost'];
+            $long = $rowd['longitude'];
+            $lat = $rowd['latitude'];
+            $alamat = $rowd['alamat'];
 
-            marker.addListener('click', function () {
-                updateMarkerColor(this);
-                calculateAndDisplayRoute(this.getPosition());
-            });
+            if (!empty($lat) && !empty($long)) {
+                ?>
+                var marker = new google.maps.Marker({
+                    position: {
+                        lat: <?php echo $lat; ?>,
+                        lng: <?php echo $long; ?>
+                    },
+                    map: googleMap,
+                    title: '<?php echo $nama; ?>',
+                    icon: {
+                        url: '../../plugins/house.png',
+                        scaledSize: new google.maps.Size(40, 40),
+                    },
+                });
 
-            markers.push(marker);
-            <?php
+                marker.addListener('click', function () {
+                    console.log('Marker clicked: ' + this.getTitle());
+                });
+
+                markers.push(marker);
+                <?php
+            }
         }
+        ?>
     }
-    ?>
 </script>
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: "Apa kamu yakin?",
+                text: "Ketika dihapus, Anda tidak dapat mengembalikan data ini!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "hapus.php?id=" + id;
+                } else {}
+            });
+        }
+    </script>
   </body>
 
   </html>

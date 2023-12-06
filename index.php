@@ -71,9 +71,10 @@ $rowd = mysqli_fetch_assoc($resultd);
           </div>
       </div>
       <br><br>
-      <button class="btn btn-primary">
-            Dapatkan lokasi terkini
-      </button>
+      <input type="text" id="search-input" placeholder="Search for a location">
+<button class="btn btn-primary" onclick="getCurrentLocation()">
+   Dapatkan lokasi terkini
+</button>
       <br>
       <br>
     </div>
@@ -165,6 +166,8 @@ $rowd = mysqli_fetch_assoc($resultd);
 <script>
     var googleMap;
     var markers = [];
+    var searchInput = document.getElementById('search-input');
+    var autocomplete;
 
     function initGoogleMap() {
         googleMap = new google.maps.Map(document.getElementById("google-map"), {
@@ -182,31 +185,109 @@ $rowd = mysqli_fetch_assoc($resultd);
 
             if (!empty($lat) && !empty($long)) {
                 ?>
-                var marker = new google.maps.Marker({
-                    position: { lat: <?php echo $lat; ?>, lng: <?php echo $long; ?> },
-                    map: googleMap,
-                    title: '<?php echo $nama; ?>',
-                    icon: {
-                        path: google.maps.SymbolPath.HOUSE,
-                        scale: 6,
-                        fillColor: 'blue',
-                        fillOpacity: 1
-                    }
-                });
-
-                marker.addListener('click', function () {
-                    updateMarkerColor(this);
-                    calculateAndDisplayRoute(this.getPosition());
-                });
-
+                var marker = createMarker(<?php echo $lat; ?>, <?php echo $long; ?>, '<?php echo $nama; ?>');
                 markers.push(marker);
                 <?php
             }
         }
         ?>
+
+        // Initialize Places Autocomplete
+        autocomplete = new google.maps.places.Autocomplete(searchInput);
+        autocomplete.bindTo('bounds', googleMap);
+
+        autocomplete.addListener('place_changed', function () {
+            var place = autocomplete.getPlace();
+            if (!place.geometry) {
+                console.error("Place not found");
+                return;
+            }
+
+            // Example: Zoom to the selected location
+            googleMap.setCenter(place.geometry.location);
+            googleMap.setZoom(15);
+        });
     }
+
+    function createMarker(lat, lng, title) {
+        var marker = new google.maps.Marker({
+            position: { lat: lat, lng: lng },
+            map: googleMap,
+            title: title,
+            icon: {
+                path: google.maps.SymbolPath.HOUSE,
+                scale: 6,
+                fillColor: 'blue',
+                fillOpacity: 1
+            }
+        });
+
+        marker.addListener('click', function () {
+            updateMarkerColor(marker);
+            calculateAndDisplayRoute(marker.getPosition());
+        });
+
+        return marker;
+    }
+
+    function updateMarkerColor(marker) {
+        marker.setIcon({
+            path: google.maps.SymbolPath.HOUSE,
+            scale: 6,
+            fillColor: 'green',
+            fillOpacity: 1
+        });
+    }
+
+    function calculateAndDisplayRoute(position) {
+        var directionsService = new google.maps.DirectionsService();
+        var directionsRenderer = new google.maps.DirectionsRenderer();
+
+        directionsRenderer.setMap(googleMap);
+
+        var request = {
+            destination: position,
+            travelMode: 'DRIVING'
+        };
+
+        directionsService.route(request, function (result, status) {
+            if (status == 'OK') {
+                directionsRenderer.setDirections(result);
+            }
+        });
+    }
+
+    function getCurrentLocation() {
+        // Example: Get the current location using the Geolocation API
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var currentLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Example: Add a marker at the current location
+                var currentLocationMarker = createMarker(currentLocation.lat, currentLocation.lng, 'Current Location');
+
+                // Example: Zoom to the current location
+                googleMap.setCenter(currentLocation);
+                googleMap.setZoom(15);
+
+                // Example: Add click event for the current location marker
+                currentLocationMarker.addListener('click', function () {
+                    // Add your code for the current location marker click event
+                });
+            }, function (error) {
+                console.error('Error getting current location:', error);
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
 </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQqCVzh9CHvZAJrfAoR-mVZD-dZxap2Xo&callback=initGoogleMap&libraries=geometry" async defer></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQqCVzh9CHvZAJrfAoR-mVZD-dZxap2Xo&callback=initGoogleMap&libraries=places"></script>
+
 
 </body>
 
