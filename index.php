@@ -1,3 +1,8 @@
+<?php require 'backend/koneksi.php'; 
+$sqld = "SELECT * FROM kost";
+$resultd = mysqli_query($conn, $sqld);
+$rowd = mysqli_fetch_assoc($resultd);
+?>
 <!DOCTYPE html>
 
 <html lang="en">
@@ -19,7 +24,7 @@
   <link href="plugins/landing/assets/css/paper-kit.css?v=2.2.0" rel="stylesheet" />
   <!-- CSS Just for demo purpose, don't include it in your project -->
   <link href="plugins/landing/assets/demo/demo.css" rel="stylesheet" />
-</head>
+  </head>
 
 <body class="landing-page sidebar-collapse">
   <!-- Navbar -->
@@ -156,22 +161,53 @@
   <!-- Control Center for Paper Kit: parallax effects, scripts for the example pages etc -->
   <script src="plugins/landing/assets/js/paper-kit.js?v=2.2.0" type="text/javascript"></script>
   <!--  Google Maps Plugin    -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQqCVzh9CHvZAJrfAoR-mVZD-dZxap2Xo&callback=initGoogleMap" async defer></script>
-  <script>
+  
+<script>
     var googleMap;
     var markers = [];
-    var circles = [];
 
     function initGoogleMap() {
-      googleMap = new google.maps.Map(document.getElementById("google-map"), {
-        center: {
-          lat: 0.537488,
-          lng: 101.448387
-        },
-        zoom: 15,
-      });
+        googleMap = new google.maps.Map(document.getElementById("google-map"), {
+            center: { lat: 0.537488, lng: 101.448387 },
+            zoom: 15,
+        });
+
+        <?php
+        $resultd = mysqli_query($conn, $sqld);
+        while ($rowd = mysqli_fetch_assoc($resultd)) {
+            $nama = $rowd['nama_kost'];
+            $long = $rowd['longitude'];
+            $lat = $rowd['latitude'];
+            $alamat = $rowd['alamat'];
+
+            if (!empty($lat) && !empty($long)) {
+                ?>
+                var marker = new google.maps.Marker({
+                    position: { lat: <?php echo $lat; ?>, lng: <?php echo $long; ?> },
+                    map: googleMap,
+                    title: '<?php echo $nama; ?>',
+                    icon: {
+                        path: google.maps.SymbolPath.HOUSE,
+                        scale: 6,
+                        fillColor: 'blue',
+                        fillOpacity: 1
+                    }
+                });
+
+                marker.addListener('click', function () {
+                    updateMarkerColor(this);
+                    calculateAndDisplayRoute(this.getPosition());
+                });
+
+                markers.push(marker);
+                <?php
+            }
+        }
+        ?>
     }
-  </script>
+</script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQqCVzh9CHvZAJrfAoR-mVZD-dZxap2Xo&callback=initGoogleMap&libraries=geometry" async defer></script>
+
 </body>
 
 </html>
